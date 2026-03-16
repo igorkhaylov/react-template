@@ -4,7 +4,7 @@ import { LOCALES } from '@/shared/constants/common'
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation()
   return (
-    <div>
+    <div className='flex items-center gap-2'>
       {LOCALES.map((locale) => (
         <div key={locale}>
           <button
