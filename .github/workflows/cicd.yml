@@ -26,7 +26,7 @@ jobs:
             echo "${{ secrets.DEV_ENV }}" > .env
           fi
 
-      - name: Build & Deploy
+      - name: Deploy
         run: |
-          docker compose down
-          docker compose up --build -d
+          docker compose pull
+          docker compose up -d

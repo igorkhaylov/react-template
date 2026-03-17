@@ -1,8 +1,6 @@
 services:
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${REGISTRY}/${IMAGE_NAME}:latest
     restart: unless-stopped
     env_file:
       - .env
