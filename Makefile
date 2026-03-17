@@ -1,6 +1,28 @@
-DC := docker compose
+include .env
+export
 
-.PHONY: up down build logs restart bash clean install start lint format check test preview env
+DC := docker compose
+IMAGE := $(REGISTRY)/$(IMAGE_NAME):latest
+
+.PHONY: up down build logs restart bash clean install start lint format check test preview env setup push
+
+# ==========================================
+# Container Registry
+# ==========================================
+
+## Создать/активировать buildx-builder с поддержкой multi-platform
+setup:
+	docker buildx create --name multiplatform --driver docker-container --use 2>/dev/null || \
+	docker buildx use multiplatform
+
+## Собрать образ для linux/amd64 и linux/arm64, запушить в реестр с тегом latest
+push: setup
+	echo "$(REGISTRY_PASSWORD)" | docker login $(REGISTRY) -u $(REGISTRY_USER) --password-stdin
+	docker buildx build \
+		--platform linux/amd64,linux/arm64 \
+		--push \
+		-t $(IMAGE) \
+		.
 
 # ==========================================
 # Docker (сборка и деплой)
