@@ -11,7 +11,7 @@ RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 # ============================================
 # Stage 2: Build application
 # ============================================
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
