@@ -54,8 +54,10 @@ bash:
 install:
 	npm ci
 
+PORT ?= 3000
+
 start:
-	npm run dev
+	npm run dev -- --port $(PORT)
 
 lint:
 	npm run lint
