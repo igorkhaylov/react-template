@@ -1,0 +1,60 @@
+name: Deploy
+
+# OPTIONAL workflow — requires a SELF-HOSTED runner registered on the target server.
+# If you deploy by SSH-ing to the server and running `make prod deploy`, you don't
+# need this at all; delete it or leave it unused.
+#
+# The runner checks out the repo (providing docker-compose.prod.yml), writes .env
+# from the selected GitHub Environment's secret, then pulls the prebuilt image from
+# GHCR (published by build-push.yml) and updates the stack. Nothing is built here.
+#
+# Per-environment configuration lives in GitHub Environments (dev / prod).
+# Required environment secret:
+#   ENV_FILE — the full contents of the server's .env (see .env.example)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options: [dev, prod]
+        default: prod
+
+permissions:
+  contents: read
+
+# Never let two deploys to the same environment overlap (a cancelled `up -d` can
+# leave a half-updated stack). Queue instead of cancel.
+concurrency:
+  group: deploy-${{ github.event.inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Write .env from environment secret
+        # The secret is passed through the job environment, NOT interpolated into the
+        # script text: `printf "${{ secrets.ENV_FILE }}"` would let quotes or $(...)
+        # in a value corrupt the file or execute on the runner (script injection).
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: |
+          umask 077
+          printf '%s' "$ENV_FILE" > .env
+
+      - name: Pull image and update the stack
+        run: |
+          docker compose -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.prod.yml up -d
+
+      - name: Prune old images
+        # `until=72h` filters by image CREATION time: images built more than 72h ago
+        # are removed once nothing references them; newer ones stay for rollback.
+        run: docker image prune -f --filter "until=72h"
