@@ -1,0 +1,41 @@
+name: react-template
+
+# Production deploy compose. The frontend image is PULLED from the registry — nothing
+# is built on the server. Pin the exact image/tag via FRONTEND_IMAGE in .env, e.g.
+#   FRONTEND_IMAGE=ghcr.io/igorkhaylov/react-template:sha-<full-sha>
+# (a moving :latest works too, but pin a sha- tag for reproducible deploys).
+#
+# Files the server needs: this file + ./.env
+# Deploy:  make prod deploy   (= docker compose -f docker-compose.prod.yml pull && up -d)
+
+# Caps Docker's json-file logs so they can't fill the host disk (the default driver
+# has NO rotation).
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '5'
+
+services:
+  frontend:
+    image: ${FRONTEND_IMAGE:-ghcr.io/igorkhaylov/react-template:latest}
+    pull_policy: always
+    restart: unless-stopped
+    logging: *default-logging
+    # VITE_* values from .env are injected into env-config.js at CONTAINER START by
+    # docker/90-env-config.sh (baked into the image) — no rebuild needed to change them.
+    env_file:
+      - .env
+    ports:
+      - '${APP_PORT:-3000}:80'
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:80/healthz']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128m
