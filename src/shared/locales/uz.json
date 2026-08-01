@@ -1,3 +1,58 @@
 {
-  "hello": "Salom"
+  "nav": {
+    "main": "Asosiy navigatsiya",
+    "home": "Bosh sahifa",
+    "about": "Shablon haqida"
+  },
+  "theme": {
+    "toggle": "Mavzuni almashtirish"
+  },
+  "language": {
+    "label": "Til"
+  },
+  "home": {
+    "title": "React Template",
+    "subtitle": "React ilovalari uchun tayyor asos: tipli routing, server holati, i18n va Docker orqali deploy — hammasi sozlangan, darhol kod yozishni boshlang.",
+    "github": "GitHub'da ochish",
+    "aboutLink": "Shablon haqida"
+  },
+  "health": {
+    "title": "Backend holati",
+    "checking": "Tekshirilmoqda…",
+    "ok": "Ulangan",
+    "unreachable": "Backend yo'q",
+    "unreachableHint": "Bu kutilgan holat — shablon backendsiz ham ishlaydi. django-template'ni ishga tushiring yoki VITE_API_BASE_URL orqali o'z API manzilingizni ko'rsating — karta yashil bo'ladi."
+  },
+  "about": {
+    "title": "Shablon haqida",
+    "intro": "Production React ilovalari uchun minimal, ammo to'liq skelet. Odatda loyihaning birinchi haftasida qo'lda sozlanadigan hamma narsa allaqachon yig'ilgan va Feature-Sliced Design bo'yicha tashkil etilgan.",
+    "includesTitle": "Ichida nima bor",
+    "includes": {
+      "routing": "TanStack Router bilan tipga xavfsiz, code-split routing",
+      "query": "TanStack Query va sozlangan QueryClient bilan server holati",
+      "ui": "Tailwind CSS 4 va shadcn/ui primitivlari, qorong'u mavzu bilan",
+      "i18n": "Tilni avtomatik aniqlaydigan i18next (ru / en / uz)",
+      "env": "Runtime muhit o'zgaruvchilari — barcha muhitlar uchun bitta image",
+      "docker": "Nginx bilan production Dockerfile",
+      "quality": "Qat'iy TypeScript, ESLint, Prettier va Vitest"
+    },
+    "layersTitle": "Loyiha tuzilishi (FSD)",
+    "layers": {
+      "app": "Ilova yig'uvi: kirish nuqtasi, providerlar, router",
+      "pages": "Quyi qatlamlardan yig'ilgan sahifalar",
+      "widgets": "Mustaqil sahifa bloklari, masalan header",
+      "features": "Foydalanuvchi amallari: mavzu va tilni almashtirish",
+      "entities": "Biznes ma'lumotlari va ularning API'si, masalan health",
+      "shared": "UI kit, API klient, konstantalar, yordamchi funksiyalar"
+    }
+  },
+  "notFound": {
+    "title": "Sahifa topilmadi",
+    "description": "Bunday sahifa mavjud emas yoki ko'chirilgan.",
+    "goHome": "Bosh sahifaga qaytish"
+  },
+  "error": {
+    "title": "Nimadir noto'g'ri ketdi",
+    "reload": "Sahifani qayta yuklash"
+  }
 }

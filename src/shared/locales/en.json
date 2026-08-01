@@ -1,3 +1,58 @@
 {
-  "hello": "Hello"
+  "nav": {
+    "main": "Main navigation",
+    "home": "Home",
+    "about": "About"
+  },
+  "theme": {
+    "toggle": "Toggle theme"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "home": {
+    "title": "React Template",
+    "subtitle": "A production-ready starting point for React apps: typed routing, server state, i18n and Docker deploy — wired up and ready to build on.",
+    "github": "View on GitHub",
+    "aboutLink": "About the template"
+  },
+  "health": {
+    "title": "Backend status",
+    "checking": "Checking…",
+    "ok": "Connected",
+    "unreachable": "No backend",
+    "unreachableHint": "This is expected — the template runs standalone. Start the django-template backend or point VITE_API_BASE_URL at your API and this card turns green."
+  },
+  "about": {
+    "title": "About this template",
+    "intro": "A minimal but complete skeleton for production React applications. Everything you usually wire up by hand in the first week of a project is already in place and organized by Feature-Sliced Design.",
+    "includesTitle": "What's included",
+    "includes": {
+      "routing": "Type-safe, code-split routing with TanStack Router",
+      "query": "Server state with TanStack Query and a tuned QueryClient",
+      "ui": "Tailwind CSS 4 and shadcn/ui primitives with dark mode",
+      "i18n": "i18next with automatic language detection (ru / en / uz)",
+      "env": "Runtime environment variables — one image for every environment",
+      "docker": "Production Dockerfile with nginx",
+      "quality": "Strict TypeScript, ESLint, Prettier and Vitest"
+    },
+    "layersTitle": "Project structure (FSD)",
+    "layers": {
+      "app": "Application wiring: entry point, providers, router",
+      "pages": "Route screens composed from the layers below",
+      "widgets": "Self-contained page blocks, e.g. the header",
+      "features": "User interactions: theme and language switching",
+      "entities": "Business data and its API, e.g. health",
+      "shared": "UI kit, API client, constants, utilities"
+    }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist or has been moved.",
+    "goHome": "Back to home"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "reload": "Reload page"
+  }
 }
