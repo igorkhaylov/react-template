@@ -1,12 +1,37 @@
+# VCS / CI
+.git
+.github
+
+# Dependencies & build output (recreated inside the image)
 node_modules
 dist
 build
-.git
-.github
-.vscode
-.devcontainer
-claude.examples
-*.md
+coverage
+.vite
+.eslintcache
+
+# Environment
 .env
 .env.local
 .env.*.local
+*.local
+
+# Docker / ops (not needed inside the image; docker/ IS needed — entrypoint script)
+docker-compose*.yml
+Makefile
+Dockerfile
+.dockerignore
+.gitignore
+
+# Editor / tooling
+.vscode
+.idea
+.devcontainer
+.claude
+
+# OS
+.DS_Store
+
+# Docs
+*.md
+docs

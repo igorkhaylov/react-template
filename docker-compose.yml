@@ -1,13 +1,35 @@
+name: react-template
+
+# Local production-like stack: builds the image from source and serves the built app
+# via nginx on http://localhost:${APP_PORT}. For a pull-based server deploy use
+# docker-compose.prod.yml instead (nothing is built there).
+
+# Caps Docker's json-file logs so they can't fill the host disk (the default driver
+# has NO rotation).
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '5'
+
 services:
   frontend:
-    image: ${REGISTRY}/${IMAGE_NAME}:latest
+    build: .
     restart: unless-stopped
+    logging: *default-logging
     env_file:
       - .env
+    # Runtime-injected configuration: docker/90-env-config.sh writes these into
+    # env-config.js at CONTAINER START, so no rebuild is needed to change them
+    # (see src/env.ts for the resolution order).
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+      VITE_APP_NAME: ${VITE_APP_NAME:-MyApp}
+      VITE_DEFAULT_LOCALE: ${VITE_DEFAULT_LOCALE:-ru}
     ports:
-      - "${APP_PORT:-3000}:80"
+      - '${APP_PORT:-3000}:80'
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80/"]
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:80/healthz']
       interval: 30s
       timeout: 5s
       retries: 3
