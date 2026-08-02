@@ -57,10 +57,10 @@ describe('i18n configuration', () => {
 describe('locale bundle parity', () => {
   // Locale files are discovered from disk, not listed by hand: adding a new
   // locale JSON automatically subjects it to the same completeness check.
-  const discovered = import.meta.glob('@/shared/locales/*.json', {
-    eager: true,
-    import: 'default',
-  }) as Record<string, Record<string, unknown>>
+  const discovered: Record<string, Record<string, unknown>> = import.meta.glob(
+    '@/shared/locales/*.json',
+    { eager: true, import: 'default' },
+  )
 
   const flatKeys = (obj: Record<string, unknown>, prefix = ''): Array<string> =>
     Object.entries(obj).flatMap(([key, value]) =>
@@ -82,9 +82,10 @@ describe('locale bundle parity', () => {
     const [reference, ...rest] = entries
     expect(reference).toBeDefined()
     for (const entry of rest) {
-      expect(entry.keys, `keys of ${entry.locale}.json differ from ${reference?.locale}.json`).toEqual(
-        reference?.keys,
-      )
+      expect(
+        entry.keys,
+        `keys of ${entry.locale}.json differ from ${reference?.locale}.json`,
+      ).toEqual(reference?.keys)
     }
   })
 })

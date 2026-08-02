@@ -56,11 +56,11 @@ is a committed fallback containing `window.__ENV__ = {}`, so resolution falls th
 
 Where the values come from in each mode:
 
-| Mode                                         | Source of `VITE_*` values                                                     |
-| -------------------------------------------- | ----------------------------------------------------------------------------- |
-| `npm run dev` / `npm run build`              | Vite `.env` files, baked at build time                                        |
+| Mode                                         | Source of `VITE_*` values                                                                       |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `npm run dev` / `npm run build`              | Vite `.env` files, baked at build time                                                          |
 | `make up` (docker-compose.yml)               | your `.env` via `env_file:` (defaults in the `environment:` block), injected at container start |
-| `make prod deploy` (docker-compose.prod.yml) | the server's `.env` via `env_file:`, injected at container start              |
+| `make prod deploy` (docker-compose.prod.yml) | the server's `.env` via `env_file:`, injected at container start                                |
 
 ## Adding a variable
 
