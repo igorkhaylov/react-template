@@ -32,7 +32,7 @@ i18n
 
 // Keep <html lang> in sync with the active locale (index.html ships a static
 // lang="en"); fires on init too, once the detector has resolved the language.
-i18n.on('languageChanged', (lng) => {
+i18n.on('languageChanged', lng => {
   document.documentElement.lang = lng
 })
 
