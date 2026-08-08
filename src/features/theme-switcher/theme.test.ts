@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { applyTheme, getCurrentTheme, getStoredTheme, initTheme } from './theme'
 
 function stubPrefersDark(matches: boolean) {
-  vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches } as MediaQueryList))
+  vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches }))
 }
 
 describe('theme', () => {
