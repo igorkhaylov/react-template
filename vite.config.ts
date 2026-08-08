@@ -23,10 +23,11 @@ export default defineConfig({
       exclude: ['src/test/**', '**/*.test.*'],
       // Regression floor enforced by CI (`npm run coverage`), set just under the
       // suite's actual numbers — raise as coverage grows, never lower silently.
+      // Functions recalibrated 78 → 75 for vitest 4's AST-based counting.
       thresholds: {
         statements: 80,
         branches: 85,
-        functions: 78,
+        functions: 75,
         lines: 80,
       },
     },

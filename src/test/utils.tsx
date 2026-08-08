@@ -48,7 +48,7 @@ export function createTestI18n(lng: string = 'en'): I18nInstance {
     fallbackLng: 'en',
     supportedLngs: LOCALES,
     // Resources are bundled, so init can complete synchronously.
-    initImmediate: false,
+    initAsync: false,
     interpolation: { escapeValue: false },
   })
   return instance
