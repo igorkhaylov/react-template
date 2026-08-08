@@ -9,6 +9,20 @@ export interface RequestOptions {
   /** Pass an AbortSignal to make the request cancellable (TanStack Query does this for you). */
   signal?: AbortSignal
   headers?: Record<string, string>
+  /** Abort the request after this many milliseconds. Default 30 000; 0 disables. */
+  timeoutMs?: number
+}
+
+export const DEFAULT_TIMEOUT_MS = 30_000
+
+// Every request gets a timeout even when the caller passes no signal — a fetch
+// with no deadline can hang a UI state forever on a stalled connection.
+function withTimeout(signal: AbortSignal | undefined, timeoutMs: number): AbortSignal | undefined {
+  if (timeoutMs <= 0) {
+    return signal
+  }
+  const timeoutSignal = AbortSignal.timeout(timeoutMs)
+  return signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal
 }
 
 /**
@@ -84,11 +98,11 @@ async function request<T>(
   body?: unknown,
   options: RequestOptions = {},
 ): Promise<T> {
-  const { params, signal, headers } = options
+  const { params, signal, headers, timeoutMs = DEFAULT_TIMEOUT_MS } = options
 
   const response = await fetch(buildUrl(path, params), {
     method,
-    signal,
+    signal: withTimeout(signal, timeoutMs),
     headers: {
       Accept: 'application/json',
       ...(body !== undefined && { 'Content-Type': 'application/json' }),

@@ -1,0 +1,32 @@
+# Weekly dependency updates for all three ecosystems the template pins:
+# npm packages, GitHub Actions versions and Docker base-image digests.
+# Commit prefix matches the repo convention ([IMP] = tooling/infra changes).
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: '[IMP]'
+    # One weekly PR for all minor+patch bumps; majors stay separate so a breaking
+    # update never hides inside a routine batch.
+    groups:
+      minor-and-patch:
+        patterns: ['*']
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: '[IMP]'
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: '[IMP]'
