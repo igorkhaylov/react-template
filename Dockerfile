@@ -26,7 +26,14 @@ RUN npm run build
 # ============================================
 # Stage 3: Production image with nginx
 # ============================================
-FROM nginx:1.28-alpine@sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236 AS production
+# Mainline (1.29) rather than stable: nginx.org recommends it for most users, and
+# its binary carries the current CVE fixes that stable only receives as distro
+# backports the official image lags behind on.
+FROM nginx:1.29-alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de AS production
+
+# The nginx image is rebuilt less often than Alpine ships security fixes — pull
+# the patched OS packages at build time so the Trivy gate in CI stays green.
+RUN apk upgrade --no-cache
 
 # Replace the default server config with ours; the shared security-headers
 # snippet goes to /etc/nginx/snippets (NOT conf.d — everything in conf.d is

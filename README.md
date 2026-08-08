@@ -13,7 +13,7 @@ variables** — build the image once, configure it at container start.
 - **i18next** (react-i18next + browser language detector) — ru / en / uz
 - **Vitest** + **Testing Library** — jsdom, V8 coverage
 - **ESLint** (TanStack config) + **Prettier** — no semicolons, single quotes
-- **Docker** — multi-stage `node:24-alpine` build → `nginx:1.28-alpine` serve (both pinned by digest)
+- **Docker** — multi-stage `node:24-alpine` build → `nginx:1.29-alpine` serve (both pinned by digest)
 - **GitHub Actions** — CI gate, GHCR image publishing, optional deploy
 
 ## Project Structure
