@@ -147,9 +147,10 @@ Setup:
    path.
 4. **Run it**: Actions → _Deploy_ → _Run workflow_ → pick `dev` or `prod`. The job checks
    out the repo (bringing the current `docker-compose.prod.yml`), writes `.env`, runs
-   `docker compose -f docker-compose.prod.yml pull && up -d`, then prunes images unused
-   for 72 h (so the previous image sticks around ~3 days for instant local rollback).
-   Deploys to the same environment queue rather than overlap.
+   `docker compose -f docker-compose.prod.yml pull && up -d`, waits until the container
+   healthcheck reports healthy (a crashlooping container fails the run and prints its
+   logs), then prunes images unused for 72 h (so the previous image sticks around ~3 days
+   for instant local rollback). Deploys to the same environment queue rather than overlap.
 
 To deploy or roll back a specific build via CI, change the `FRONTEND_IMAGE` pin inside the
 environment's `ENV_FILE` secret and re-run the workflow.

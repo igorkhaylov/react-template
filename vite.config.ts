@@ -21,6 +21,14 @@ export default defineConfig({
       reporter: ['text', 'html'],
       include: ['src/**'],
       exclude: ['src/test/**', '**/*.test.*'],
+      // Regression floor enforced by CI (`npm run coverage`), set just under the
+      // suite's actual numbers — raise as coverage grows, never lower silently.
+      thresholds: {
+        statements: 80,
+        branches: 85,
+        functions: 78,
+        lines: 80,
+      },
     },
   },
 })

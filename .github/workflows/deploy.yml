@@ -6,7 +6,8 @@ name: Deploy
 #
 # The runner checks out the repo (providing docker-compose.prod.yml), writes .env
 # from the selected GitHub Environment's secret, then pulls the prebuilt image from
-# GHCR (published by build-push.yml) and updates the stack. Nothing is built here.
+# GHCR (published by build-push.yml), updates the stack and waits until the
+# container's healthcheck reports healthy. Nothing is built here.
 #
 # Per-environment configuration lives in GitHub Environments (dev / prod).
 # Required environment secret:
@@ -34,6 +35,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: self-hosted
+    timeout-minutes: 15
     environment: ${{ github.event.inputs.environment }}
     steps:
       - name: Checkout
@@ -53,6 +55,33 @@ jobs:
         run: |
           docker compose -f docker-compose.prod.yml pull
           docker compose -f docker-compose.prod.yml up -d
+
+      # `up -d` exits 0 even if the new container immediately crashloops — without
+      # this gate the workflow would report a broken deploy as green. The container
+      # healthcheck probes every 30s, so healthy normally arrives within ~40s.
+      - name: Wait until the container is healthy
+        run: |
+          cid=$(docker compose -f docker-compose.prod.yml ps -q frontend)
+          if [ -z "$cid" ]; then
+            echo "frontend container not found:"
+            docker compose -f docker-compose.prod.yml ps
+            exit 1
+          fi
+          status=unknown
+          for _ in $(seq 1 36); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' "$cid")
+            if [ "$status" = "healthy" ]; then
+              echo "Container is healthy."
+              exit 0
+            fi
+            if [ "$status" = "unhealthy" ]; then
+              break
+            fi
+            sleep 5
+          done
+          echo "Container never became healthy (status: $status) — recent logs:"
+          docker logs --tail 50 "$cid"
+          exit 1
 
       - name: Prune old images
         # `until=72h` filters by image CREATION time: images built more than 72h ago

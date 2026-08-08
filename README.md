@@ -13,7 +13,7 @@ variables** — build the image once, configure it at container start.
 - **i18next** (react-i18next + browser language detector) — ru / en / uz
 - **Vitest** + **Testing Library** — jsdom, V8 coverage
 - **ESLint** (TanStack config) + **Prettier** — no semicolons, single quotes
-- **Docker** — multi-stage `node:24-alpine` build → `nginx:1.27-alpine` serve
+- **Docker** — multi-stage `node:24-alpine` build → `nginx:1.28-alpine` serve (both pinned by digest)
 - **GitHub Actions** — CI gate, GHCR image publishing, optional deploy
 
 ## Project Structure
@@ -96,7 +96,7 @@ and the security notes: [docs/runtime-env.md](docs/runtime-env.md).
 | Script                 | What it does                                                      |
 | ---------------------- | ----------------------------------------------------------------- |
 | `npm run dev`          | Vite dev server with HMR on port 3000                             |
-| `npm run build`        | Type-check (`tsc --noEmit`) then production build to `dist/`      |
+| `npm run build`        | Production build to `dist/` (types are gated by `typecheck` / CI) |
 | `npm run preview`      | Serve the built `dist/` locally                                   |
 | `npm run typecheck`    | TypeScript check, no emit                                         |
 | `npm run lint`         | ESLint                                                            |
@@ -130,9 +130,9 @@ Vitest + Testing Library on jsdom; `globals: true`, setup in
 test). Tests are colocated with the code (`*.test.ts(x)`).
 
 ```bash
-npm run test          # single run (what CI runs)
+npm run test          # single run
 npm run test:watch    # watch mode
-npm run coverage      # V8 coverage, text + html (coverage/ is gitignored)
+npm run coverage      # what CI runs: V8 coverage + thresholds (coverage/ is gitignored)
 ```
 
 [`src/test/utils.tsx`](src/test/utils.tsx) provides `renderWithProviders` (isolated
@@ -145,7 +145,8 @@ QueryClient + i18n instance), `renderWithRouter` (memory-history router), and
   (type-aware) + `eslint-config-prettier`, plus a few explicit rules (`no-console` warns).
 - **Prettier** — [`prettier.config.js`](prettier.config.js): no semicolons, single quotes,
   width 100, Tailwind class sorting via `prettier-plugin-tailwindcss`.
-- **TypeScript** — strict mode, `noUnusedLocals`/`noUnusedParameters`, `@/*` → `src/*` alias.
+- **TypeScript** — strict mode plus `noUncheckedIndexedAccess`,
+  `noUnusedLocals`/`noUnusedParameters`, `@/*` → `src/*` alias.
 
 `npm run check` runs everything non-mutating — the same gates CI runs (CI additionally
 verifies the production build with `npm run build`).
@@ -192,18 +193,24 @@ standalone.
 
 ## CI/CD
 
-- [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — on every pull request and push to
-  `master`: `format:check` → `lint` → `typecheck` → `test` → `build`.
+- [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — the quality gate, defined once:
+  `npm audit` (prod deps, high+) → `format:check` → `lint` → `typecheck` → `coverage`
+  (tests + thresholds) → `build`. Runs on every pull request, and build-push.yml calls it
+  (`workflow_call`) before publishing — which is what gates pushes to `master`.
 - [`.github/workflows/build-push.yml`](.github/workflows/build-push.yml) — on push to
-  `master`, on `v*` tags, or manual: runs the same quality gate, then builds the Docker
-  image and pushes it to **GHCR** (`ghcr.io/<owner>/<repo>`) with tags `latest` (default
-  branch), `sha-<full-sha>` (every build — use this to pin prod), and `vX.Y.Z` / `X.Y.Z`
-  (git tags). Needs no secrets beyond the built-in `GITHUB_TOKEN`.
+  `master`, on `v*` tags, or manual: runs the quality gate, builds the multi-arch
+  (`amd64`+`arm64`) Docker image, pushes it to **GHCR** (`ghcr.io/<owner>/<repo>`) with tags
+  `latest` (default branch), `sha-<full-sha>` (every build — use this to pin prod), and
+  `vX.Y.Z` / `X.Y.Z` (git tags), then scans the pushed image with **Trivy** (fails on
+  fixable high/critical CVEs). Needs no secrets beyond the built-in `GITHUB_TOKEN`.
 - [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) — **optional**, manual
   dispatch only, requires a **self-hosted runner** on the target server. Picks a GitHub
   Environment (`dev` / `prod`), writes `.env` from that environment's `ENV_FILE` secret,
-  then `docker compose -f docker-compose.prod.yml pull && up -d`. If you deploy by SSH-ing
-  in and running `make prod deploy`, delete it or leave it unused.
+  runs `docker compose -f docker-compose.prod.yml pull && up -d`, then waits until the
+  container healthcheck reports healthy (a crashlooping deploy fails the run). If you
+  deploy by SSH-ing in and running `make prod deploy`, delete it or leave it unused.
+- [`.github/dependabot.yml`](.github/dependabot.yml) — weekly update PRs for npm packages
+  (minor+patch grouped), GitHub Actions versions and Docker base-image digests.
 
 ## Production deploy
 

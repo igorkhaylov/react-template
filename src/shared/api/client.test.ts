@@ -80,13 +80,43 @@ describe('apiClient', () => {
     expect(requestHeaders()['Content-Type']).toBe('application/json')
   })
 
-  it('passes the AbortSignal through to fetch', async () => {
+  it('passes the caller signal through unchanged when the timeout is disabled', async () => {
+    fetchMock.mockResolvedValue(fakeResponse({ body: null }))
+    const controller = new AbortController()
+
+    await apiClient.get('/items/', { signal: controller.signal, timeoutMs: 0 })
+
+    expect(requestInit().signal).toBe(controller.signal)
+  })
+
+  it('sends no signal when the timeout is disabled and no signal is given', async () => {
+    fetchMock.mockResolvedValue(fakeResponse({ body: null }))
+
+    await apiClient.get('/items/', { timeoutMs: 0 })
+
+    expect(requestInit().signal).toBeUndefined()
+  })
+
+  it('attaches a timeout signal by default', async () => {
+    fetchMock.mockResolvedValue(fakeResponse({ body: null }))
+
+    await apiClient.get('/items/')
+
+    expect(requestInit().signal).toBeInstanceOf(AbortSignal)
+  })
+
+  it('combines the caller signal with the timeout so either can abort', async () => {
     fetchMock.mockResolvedValue(fakeResponse({ body: null }))
     const controller = new AbortController()
 
     await apiClient.get('/items/', { signal: controller.signal })
 
-    expect(requestInit().signal).toBe(controller.signal)
+    const combined = requestInit().signal
+    expect(combined).toBeInstanceOf(AbortSignal)
+    expect(combined).not.toBe(controller.signal)
+    expect(combined?.aborted).toBe(false)
+    controller.abort()
+    expect(combined?.aborted).toBe(true)
   })
 
   it('returns null for a 204 No Content response', async () => {

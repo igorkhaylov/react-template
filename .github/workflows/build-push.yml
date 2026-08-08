@@ -1,8 +1,8 @@
 name: Build and push frontend image
 
-# Builds the frontend Docker image and pushes it to the GitHub Container Registry
-# (ghcr.io). The deploy server never builds — it only pulls this image
-# (see docker-compose.prod.yml + `make prod deploy`).
+# Builds the frontend Docker image (linux/amd64 + linux/arm64) and pushes it to the
+# GitHub Container Registry (ghcr.io). The deploy server never builds — it only
+# pulls this image (see docker-compose.prod.yml + `make prod deploy`).
 #
 # Tags produced:
 #   - latest            (only on the default branch)
@@ -18,41 +18,26 @@ on:
 env:
   REGISTRY: ghcr.io
 
+permissions:
+  contents: read
+
+# Queue overlapping builds of the same ref instead of cancelling: a cancelled
+# multi-arch push could leave a partially updated manifest behind.
+concurrency:
+  group: build-push-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  # Gate: the image is only built/pushed if the same checks as ci.yml pass.
+  # Gate: the image is only built/pushed if the same checks as every PR pass.
+  # Defined once in ci.yml (workflow_call) so the two cannot drift apart.
   quality:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check formatting
-        run: npm run format:check
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Test
-        run: npm run test
-
-      - name: Build
-        run: npm run build
+    uses: ./.github/workflows/ci.yml
 
   build-and-push:
     needs: quality
     runs-on: ubuntu-latest
+    # The arm64 half runs under QEMU emulation — an uncached build is slow.
+    timeout-minutes: 45
     permissions:
       contents: read
       packages: write
@@ -64,6 +49,10 @@ jobs:
       # refs must be lowercase — lowercase it before it reaches the image name.
       - name: Compute lowercase image name
         run: echo "IMAGE_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+
+      # QEMU provides the arm64 emulation for the multi-platform build below.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -91,8 +80,41 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
+          # Match `make push`: the server can be either architecture.
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # Vulnerability gate: scans the image that was just pushed. Runs AFTER the push —
+  # the image is already in the registry, but deploys are manual and pin a tag, so a
+  # red scan here is the signal not to roll it out.
+  scan:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Compute lowercase image name
+        run: echo "IMAGE_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Scan image for vulnerabilities (Trivy)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+          format: table
+          exit-code: '1'
+          severity: CRITICAL,HIGH
+          # Alpine CVEs without an upstream fix would otherwise block every build.
+          ignore-unfixed: true
