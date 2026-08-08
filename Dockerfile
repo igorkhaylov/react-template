@@ -29,7 +29,7 @@ RUN npm run build
 # Mainline (1.29) rather than stable: nginx.org recommends it for most users, and
 # its binary carries the current CVE fixes that stable only receives as distro
 # backports the official image lags behind on.
-FROM nginx:1.29-alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de AS production
+FROM nginx:1.31-alpine@sha256:4a73073bd557c65b759505da037898b61f1be6cbcc3c2c3aeac22d2a470c1752 AS production
 
 # The nginx image is rebuilt less often than Alpine ships security fixes — pull
 # the patched OS packages at build time so the Trivy gate in CI stays green.
