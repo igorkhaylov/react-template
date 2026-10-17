@@ -39,7 +39,7 @@ jobs:
     environment: ${{ github.event.inputs.environment }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Write .env from environment secret
         # The secret is passed through the job environment, NOT interpolated into the

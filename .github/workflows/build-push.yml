@@ -43,7 +43,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # github.repository keeps the owner/repo casing as typed on GitHub, but Docker
       # refs must be lowercase — lowercase it before it reaches the image name.
